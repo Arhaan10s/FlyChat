@@ -1,0 +1,291 @@
+{% extends "network/layout.html" %}
+{% block body %}
+     <style>
+        .new-post{
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-start;
+            align-items:flex-start;
+         }         
+         .all-post{
+            display: flex;
+            justify-content:flex-start;
+            flex-direction: column;
+            margin:20px;
+        }
+        .post{
+            border: 0.1px solid grey;
+            display:flex;
+            justify-content:center;
+            flex-direction:column;
+            box-sizing:border-box ;
+            margin:5px 20px;
+        }
+        .content{
+            font-size:15 px;
+            border-color:red;
+        }
+        .username{
+            font-size:22px;
+            font-style:italic;
+        }
+        .date{
+            color:grey;
+            font-size:15px;
+        }
+        .button{
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+        }
+        .button {
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #4ec2bc;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 20px;
+            padding: 15px;
+            width: 100px;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+          }
+          
+          .button span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+          }
+          
+          .button span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            right: -20px;
+            transition: 0.5s;
+          }
+          
+          .button:hover span {
+            padding-right: 25px;
+          }
+          
+          .button:hover span:after {
+            opacity: 1;
+            right: 0;
+          }
+
+        .buttn{
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+        }
+        .buttn {
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #4ec2bc;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 20px;
+            padding: 15px;
+            width: 150px;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+          }
+          
+          .buttn span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+          }
+          
+          .buttn span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            left: -20px;
+            transition: 0.5s;
+          }
+          
+          .buttn:hover span {
+            padding-left: 25px;
+          }
+          
+          .buttn:hover span:after {
+            opacity: 1;
+            left: 0;
+          }
+
+          .btnn{
+            display: inline-block;
+            padding: 15px 25px;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            outline: none;
+            color: #fff;
+            background-color: #4ec2bc;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px #4b8582;
+          }
+          
+          .btnn:hover {background-color: #39a09b}
+          
+          .btnn:active {
+            background-color: #39a09b;
+            box-shadow: 0 5px #666;
+            transform: translateY(4px);
+          }
+
+          
+    </style> 
+    
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();          
+        }
+        
+        function submitHandler(id)  
+        {
+            const textareaValue=document.getElementById(`textarea_${id}`).value;
+            const content=document.getElementById(`content_${id}`);
+            const modal=document.getElementById(`modal_edit_post${id}`);
+            fetch(`/edit/${id}`,{
+                method:"POST",
+                headers:{"Content-type":"application/json","X-CSRFToken":getCookie("csrftoken")},
+                body:JSON.stringify({
+                    content: textareaValue
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                    content.innerHTML=result.data;
+                    modal.classList.remove('show');
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.setAttribute('style', 'display: none');
+                  
+              
+                   // get modal backdrops
+                   const modalBackdrops = document.getElementsByClassName('modal-backdrop');
+              
+                   // remove every modal backdrop
+                   for(let i=0; i<modalBackdrops.length; i++) {
+                     document.body.removeChild(modalBackdrops[i]);
+                   }                    
+            })
+        }
+
+        function likeHandler(id,whoYouLiked)
+        {
+            const btn=document.getElementById(`${id}`);
+
+            btn.classList.remove('fa-thumbs-up');
+            btn.classList.remove('fa-thumbs-down');
+
+            if(whoYouLiked.indexOf(id)>=0)
+            {
+                var liked=true;
+            }
+            else
+            {
+                var liked=false;
+            }
+            
+            if(liked === true)
+            {
+                fetch(`/remove_like/${id}`)
+                .then(response => response.json)
+                .then(result => {
+                    btn.classList.add('fa-thumbs-up')
+                    
+                })
+                
+            }
+            else
+            {
+                fetch(`/add_like/${id}`)
+                .then(response => response.json)
+                .then(result => {
+                    btn.classList.add('fa-thumbs-down')
+                })
+            }
+            liked=!liked
+        }
+    </script>
+    <h1 class="mx-5" style="font-family:fantasy">ALL POST</h1>
+    {% if user.is_authenticated %}
+    <div class="new-post mx-5">
+        <h2>New Post</h2>
+            <form action="{% url 'newPost' %}" method="post">
+                {% csrf_token %}
+                <textarea name="content" row="4" cols="100"style="border-radius: 15px 50px;
+                background:#6abeba;
+                 border: 2px solid #73AD21;
+                padding: 20px;
+                width: 400px;
+                height: 100px;"></textarea>
+                <br/>
+                <input type="submit" value="Post" class="btnn"/>
+            </form>
+        </div>
+        {% endif %}
+        <div class="all-posts">
+            {% for post in posts_of_the_page %}
+            <div class="row post mx-1">
+                <h5 class="username"><a href="{% url 'profile' user_id=post.user.id %}">@{{ post.user }}</a></h5>
+                <h6 class="content" style=" font-family: cursive; font-size:20px" id="content_{{ post.id }}">{{ post.content }}</h6>
+                <p class="date">{{ post.date }}</p>
+                {% if user.is_authenticated %}
+                {% if user == post.user%}
+                <div class="d-flex justify-content-left">
+                    <button class="btn btn-danger" data-toggle="modal" data-target="#modal_edit_post{{ post.id }}">Edit</button>
+                </div>
+                        <div class="modal fade" id="modal_edit_post{{ post.id }}" tabindex="-1" role="dialog"  aria-labelledby="modal_edit_post{{ post.id }}_label" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title">Edit</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <textarea rows="5" id="textarea_{{ post.id }}" class="form-control" name="content" >{{ post.content }}</textarea>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-primary" onclick="submitHandler({{post.id}})">SaveChanges</button>
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        {% else %}
+                            {% if post.id in whoYouLiked and request.user in post.likes.all  %}
+                           <button class="btn btn-info fa fa-thumbs-down col-1 "onclick="likeHandler({{ post.id }}, {{ whoYouLiked }})" id="{{ post.id }}"data-total="{{post.likes.all.count}}" value="submit"><span id="likes{{post.id}}">{{post.likes.all.count}}</span>
+                            {% else %}
+                            <button class="btn btn-info fa fa-thumbs-up col-1" onclick="likeHandler({{ post.id }}, {{ whoYouLiked }})" id="{{ post.id }}">
+                        {% endif %}
+                        <strong>{{ post.likes.all.count }}</strong>
+                    {% endif %}
+                    {% endif %}
+                </div>
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-center">
+            {% if posts_of_the_page.has_previous %}
+                <li class="page-item"><a class="buttn" href="?page={{ posts_of_the_page.previous_page_number }}"><span>Previous</span></a></li>
+            {% endif %}
+            {% if posts_of_the_page.has_next %}
+                <li class="page-item"><a id="button" class="button" href="?page={{ posts_of_the_page.next_page_number }}"><span>Next</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endblock %}

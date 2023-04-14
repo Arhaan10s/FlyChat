@@ -1,0 +1,183 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+     <style>
+        .new-post{
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-start;
+            align-items:flex-start;
+         }         
+         .all-post{
+            display: flex;
+            justify-content:flex-start;
+            flex-direction: column;
+            margin:20px;
+        }
+        .post{
+            border: 0.1px solid grey;
+            display:flex;
+            justify-content:center;
+            flex-direction:column;
+            box-sizing:border-box ;
+            margin:5px 20px;
+        }
+        .content{
+            font-size:15 px;
+        }
+        .username{
+            font-size:22px;
+            font-style:italic;
+        }
+        .date{
+            color:grey;
+            font-size:15px;
+        }
+        .button{
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+        }
+        .button {
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #4ec2bc;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 20px;
+            padding: 15px;
+            width: 100px;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+          }
+          
+          .button span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+          }
+          
+          .button span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            right: -20px;
+            transition: 0.5s;
+          }
+          
+          .button:hover span {
+            padding-right: 25px;
+          }
+          
+          .button:hover span:after {
+            opacity: 1;
+            right: 0;
+          }
+
+        .buttn{
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+        }
+        .buttn {
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #4ec2bc;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 20px;
+            padding: 15px;
+            width: 150px;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+          }
+          
+          .buttn span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+          }
+          
+          .buttn span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            left: -20px;
+            transition: 0.5s;
+          }
+          
+          .buttn:hover span {
+            padding-left: 25px;
+          }
+          
+          .buttn:hover span:after {
+            opacity: 1;
+            left: 0;
+          }
+    </style> 
+    <script>
+        function likeHandler(id,whoYouLiked)
+        {
+            const btn=document.getElementById(`${id}`);
+
+            btn.classList.remove('fa-thumbs-up');
+            btn.classList.remove('fa-thumbs-down');
+
+            if(whoYouLiked.indexOf(id)>=0)
+            {
+                var liked=true;
+            }
+            else
+            {
+                var liked=false;
+            }
+            if(liked === true)
+            {
+                fetch(`/remove_like/${id}`)
+                .then(response => response.json)
+                .then(result => {
+                    btn.classList.add('fa-thumbs-up')
+                })
+                
+            }
+            else
+            {
+                fetch(`/add_like/${id}`)
+                .then(response => response.json)
+                .then(result => {
+                    btn.classList.add('fa-thumbs-down')
+                })
+            }
+            liked=!liked
+        }
+
+    </script>
+    <div class="all-posts">
+        {% for post in posts_of_the_page %}
+            <div class="row post mx-1">
+                <h5 class="username"><a href="{% url 'profile' user_id=post.user.id %}">@{{ post.user }}</a></h5>
+                <h6 class="content" style="font-family:cursive;font-size:20px">{{ post.content }}</h6>
+                <p class="date">{{ post.date }}</p>
+                {% if post.id in whoYouLiked %}
+                    <button class="btn btn-info fa fa-thumbs-down col-1 "onclick="likeHandler({{ post.id }}, {{ whoYouLiked }})" id="{{ post.id }}"></button>
+                {% else %}
+                 <button class="btn btn-info fa fa-thumbs-up col-1" onclick="likeHandler({{ post.id }}, {{ whoYouLiked }})" id="{{ post.id }}"></button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-center">
+            {% if posts_of_the_page.has_previous %}
+                <li class="page-item"><a class="buttn" href="?page={{ posts_of_the_page.previous_page_number }}"><span>Previous</span></a></li>
+            {% endif %}
+            {% if posts_of_the_page.has_next %}
+                <li class="page-item"><a class="button" href="?page={{ posts_of_the_page.next_page_number }}"><span>Next</span></a></li>
+            {% endif %}
+        </ul>
+      </nav>
+{% endblock %}
